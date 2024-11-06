@@ -46,7 +46,8 @@ def get_args():
     group5.add_argument('--dataset', default="cam", type=str,
                         choices=["cam", "lung"], help='input size ')
     group5.add_argument('--datasetpath',  type=str, help='dataset path')
-
+    group5.add_argument('--optimalthreshold', default=False, type=bool, help='Calculate optimal threshold if true, set the threshold to 0.5 otherwise')
+    
     # Distillation arguments
     group6 = parser.add_argument_group("distillation")
     group6.add_argument('--lamb', default=1, type=float, help='lambda')
@@ -54,7 +55,7 @@ def get_args():
     group6.add_argument('--temperature', default=1.5, type=float, help='temperature')
     group6.add_argument('--add_bias', default=True,action="store_true")
     group6.add_argument('--checkpoint', default=None,type=str, help='checkpoint')
-
+    group6.add_argument("--randomstore", default=False,help="ramdom sampling during the buffer storage")
     parser.add_argument('--tag', default="split", type=str, help='train strategy')
     parser.add_argument('--modeltype', default="DASMIL", type=str, help='train strategy')
     parser.add_argument('--project', default="decider-geom", type=str, help='project name for wandb')

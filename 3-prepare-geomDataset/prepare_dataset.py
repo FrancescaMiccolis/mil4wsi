@@ -188,9 +188,11 @@ class MyOwnDataset(Dataset):
                     os.makedirs(os.path.join(
                         self.processed_dir, "train"), exist_ok=True)
                     if "test" in bag:
+                        print('Slide ',bag,' processed and saved in test')
                         torch.save(data, os.path.join(
                             self.processed_dir, "test", 'data_{}.pt'.format(idx)))
                     else:
+                        print('Slide ',bag,' processed and saved in train')
                         torch.save(data, os.path.join(self.processed_dir,
                                 "train", 'data_{}.pt'.format(idx)))
                 except:
@@ -236,8 +238,8 @@ def main():
     executor.update_parameters(
         slurm_partition="prod", name="data_prep", slurm_time=1200, cpus_per_task=5, mem_gb=20)
     # Submit the prepareslide function as a job
-    jobs = executor.submit(prepareslide)
-    #prepareslide()
+    #jobs = executor.submit(prepareslide)
+    prepareslide()
 
 
 if __name__ == '__main__':

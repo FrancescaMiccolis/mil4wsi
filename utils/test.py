@@ -1,85 +1,128 @@
 import torch
 import numpy as np
+from torch.nn import BCEWithLogitsLoss
 from utils.metrics import computeMetrics
+import wandb
+import pandas as pd
+from utils.qupath import processjson
 
-
-def test(model, testloader):
-    """
-    Perform testing on the model.
-
-    Args:
-        model (torch.nn.Module): Model to be tested.
-        testloader (torch.utils.data.DataLoader): DataLoader for the test dataset.
-
-    Returns:
-        avg_score_higher (float): Average score for higher-level predictions.
-        avg_score_lower (float): Average score for lower-level predictions.
-        auc_value_higher (float): AUC value for higher-level predictions.
-        auc_value_lower (float): AUC value for lower-level predictions.
-        class_prediction_bag_higher (numpy.ndarray): Class predictions for higher-level predictions.
-        class_prediction_bag_lower (numpy.ndarray): Class predictions for lower-level predictions.
-        test_labels (numpy.ndarray): Ground truth labels.
-    """
+def test(model,testloader,args,bestperformance,epoch):
+    lr=args.lr
+    dr=args.dropout_rate
+    seed=args.seed
+    task=args.task
+    datasetpath=args.datasetpath
+    optimal=args.optimalthreshold
+    modello=args.modeltype
     model.eval()
-    results = []
-    test_predictions0 = []
-    test_predictions1 = []
-    test_labels = []
-    names = []
-    # Iterate over the test data
-    for _, data in enumerate(testloader):
-        data = data.cuda()
-        x, edge_index, childof, level = data.x, data.edge_index, data.childof, data.level
-
-        # Check if additional edge indices are present
+    results=[]
+    test_predictions0=[]
+    test_predictions1=[]
+    test_labels=[]
+    testloss=[]
+    idxs=[]
+    names=[]
+    loss_module_instance = BCEWithLogitsLoss()
+    if task == "PFI":
+        pfis=[]
+        dfpfi=pd.read_csv("/work/H2020DeciderFicarra/fmiccolis/clinical_export_2023-07-05.csv")
+        expfi=pd.read_excel("/work/H2020DeciderFicarra/D2_4/datasets/DECIDER_cohorts/docs/240607_Clinical_export_Decider_Collab.xlsx")
+    elif task == "HR":
+        hrs=[]
+    # elif task == "Stadio":
+    #     stadios=[]
+    for _,data in enumerate(testloader):
+        data= data.cuda()
+        x, edge_index,childof,level,x_coords,y_coords,name = data.x, data.edge_index,data.childof,data.level,data.x_coord,data.y_coord,data.name
         if data.__contains__("edge_index_2") and data.__contains__("edge_index_3"):
-            edge_index2, edge_index3 = data.edge_index_2, data.edge_index_3
+            edge_index2,edge_index3=data.edge_index_2,data.edge_index_3
         else:
-            edge_index2 = None
-            edge_index3 = None
-        # Forward pass through the model
-        results = model(x, edge_index, level, childof,
-                        edge_index2, edge_index3)
-        bag_label = data.y.float().squeeze().cpu().numpy()
-
-        # Convert bag label to numpy array
-        if model.classes == 2:
-            if bag_label == 1:
-                bag_label = torch.LongTensor(
-                    [[0, 1]]).float().squeeze().cpu().numpy()
+            edge_index2=None
+            edge_index3=None
+        id= name[0].split("_")[0]
+        idxs.append(id)        
+        names.append(name[0])
+        if task == "PFI":
+            # dfpfi['platinum_free_interval']=dfpfi['platinum_free_interval'].fillna(dfpfi['platinum_free_interval_at_update'])
+            # try:
+            #     pfitmp=int(dfpfi[dfpfi["cohort_code"]==id]["platinum_free_interval"].item())
+            # except:
+            try:
+                pfitmp=int(expfi[expfi["Patient card::Patient cohort code_Patient Card"]==id]["PFI_KaplanM_allHGSC"].item())
+            except:
+                pfitmp=0
+                print('PFI non trovato')
+            pfis.append(pfitmp)
+        elif task == "HR":
+            if name[0].split("_")[-1]=="1":
+                hr="HRP"
             else:
-                bag_label = torch.LongTensor(
-                    [[1, 0]]).float().squeeze().cpu().numpy()
+                hr="HRD"
+            hrs.append(hr)
+        # elif task == "Stadio":
+        #     if name[0].split("_")[-1]=="1":
+        #         stadio="IV"
+        #     else:
+        #         stadio="III"
+        #     stadios.append(stadio)
 
-        # Append the test labels and predictions
+        results = model(x, edge_index,level,childof,edge_index2,edge_index3)
+        bag_label=data.y.float().squeeze().cpu().numpy()
+        levelmax=level.max()
+        x_coords=x_coords[level==levelmax]
+        y_coords=y_coords[level==levelmax]
+        loss= model.compute_loss(loss_module_instance,results,data.y.float())
+        testloss.append(loss.item())
+        if model.classes==2:
+            if bag_label==1:
+                bag_label= torch.LongTensor([[0,1]]).float().squeeze().cpu().numpy()
+            else:
+                bag_label= torch.LongTensor([[1,0]]).float().squeeze().cpu().numpy()
         test_labels.extend([bag_label])
-        preds = model.predict(results)
+        preds=model.predict(results)
         test_predictions0.extend([(preds[0]).squeeze().cpu().detach().numpy()])
 
         if preds[1] is not None:
-            test_predictions1.extend(
-                [(preds[1]).squeeze().cpu().detach().numpy()])
-
-    # Convert the test labels and predictions to numpy arrays
+            test_predictions1.extend([(preds[1]).squeeze().cpu().detach().numpy()])
+    testloss=np.array(testloss)
+    test_loss = np.mean(testloss)
     test_labels = np.array(test_labels)
     test_predictions0 = np.array(test_predictions0)
+    
     test_predictions1 = np.array(test_predictions1)
+    test_predictions,probabilities,acc,auc,f1,precision,recall,cm,specificity,image,threshold=computeMetrics(test_labels,test_predictions0,model.classes,names,optimal)
 
-    # Compute metrics for higher-level predictions
-    avg_score_higher, auc_value_higher, class_prediction_bag_higher = computeMetrics(
-        test_labels, test_predictions0, model.classes, names)
+    wandb.log({
+            "Test/Loss":test_loss,
+            "Test/Acc":acc,
+            "Test/f1":f1,
+            "Test/precision":precision,
+            "Test/recall":recall,
+            "Test/confusion_matrix":wandb.Image(image),
+            "Test/specificity":specificity,
+            "Test/auc":auc,
+            "Test/optimal_threshold":threshold,
+            "epoch":epoch,
+        })
+    performance=float(auc)
+    if performance>bestperformance:
+        bestperformance=performance
+        for _,data in enumerate(testloader):
+            data= data.cuda()
+            x, edge_index,childof,level,x_coords,y_coords,name = data.x, data.edge_index,data.childof,data.level,data.x_coord,data.y_coord,data.name
+            results = model(x, edge_index,level,childof,None,None)
+            x_coords=x_coords[level==levelmax]
+            y_coords=y_coords[level==levelmax]
+           
+            processjson(A= results["higher"][2].cpu().detach().numpy(),x=x_coords.cpu().detach().numpy(),y=y_coords.cpu().detach().numpy(),name=name[0],levelmax=levelmax,epoch=epoch,modello=modello,learning_rate=lr,dropout_rate=dr,seed=seed,task=task,dataset=datasetpath.split('/')[-1],optimal=optimal) 
+        if task == "PFI":
+            df=pd.DataFrame({"id":idxs,"slide_name":names,"test_labels":test_labels,"probability":probabilities,"predictions":test_predictions,"pfi":pfis})
+        elif task == "HR":
+            df=pd.DataFrame({"id":idxs,"slide_name":names,"test_labels":test_labels,"probability":probabilities,"predictions":test_predictions,"hr":hrs})
+        
+        wandb.log({"table":wandb.Table(columns=list(df.columns),data=df)})
 
-    # Compute metrics for lower-level predictions if available
-    if test_predictions1.shape[0] != 0:
-        avg_score_lower, auc_value_lower, class_prediction_bag_lower = computeMetrics(
-            test_labels, test_predictions1, model.classes, names)
-    else:
-        avg_score_lower = 0
-        auc_value_lower = 0
-        class_prediction_bag_lower = 0
+    
+    return bestperformance
 
-    # Set the model back to training mode
-    model.train()
 
-    # Return the computed metrics and predictions
-    return avg_score_higher, avg_score_lower, auc_value_higher, auc_value_lower, class_prediction_bag_higher, class_prediction_bag_lower, test_labels

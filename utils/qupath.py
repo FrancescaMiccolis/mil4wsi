@@ -126,43 +126,51 @@ def compute_heatmap(A,x_array,y_array, res, bound):
         attention_json.append(json_skeleton)
     return attention_json
 
-def processjson(A,x,y,name,levelmax):
-    #A = pd.read_csv(args.attention_csv, index_col=0)
+def processjson(A, x, y, name, levelmax,epoch,modello,learning_rate,dropout_rate,seed,task,dataset,optimal):
+    # A = pd.read_csv(args.attention_csv, index_col=0)
 
-    root='/mnt/beegfs/work/H2020DeciderFicarra/DECIDER/WSI_24_11_2022/'
-    destination_root="/mnt/beegfs/work/H2020DeciderFicarra/attentafrancy/json/"
-    slide_path=root+name
-    slide_path=slide_path[:-2]+".mrxs"
+    if name[-3] == '_' and name[-2] == '_':
+        name=name[:-3]+name[-2:]
 
-    json_path=destination_root+name
-    json_path=json_path[:-2]+".json"
-    #name = args.attention_csv.split('/')[10].split('.')[0]+'.json'
-
-    #slide = args.attention_csv.split('/')[10].split('.')[0][:-2]+'.mrxs'
+    if task == 'HR':
+        root = '/work/H2020DeciderFicarra/decider/WSIs/WSI_24_11_2022/'
+        destination_root = f"/work/H2020DeciderFicarra/attention_maps/{task}/PDS/{levelmax}/{modello}/{seed}/{dataset}/"
+        slide_path = root+name
+        slide_path = slide_path[:-2]+".mrxs"
+    elif task == 'PFI':
+        root = '/work/H2020DeciderFicarra/decider/WSIs/WSI_24_11_2022/'
+        if optimal:
+            destination_root = f"/work/H2020DeciderFicarra/attention_maps/{task}/{levelmax}/Downstream_analysis/Truebuffer_class0/optimalthreshold/json/{modello}/{dataset}/"
+        else:
+            destination_root = f"/work/H2020DeciderFicarra/attention_maps/{task}/{levelmax}/Downstream_analysis/Truebuffer_class0/halfthreshold/json/{modello}/{dataset}/"
+        slide_path = root+name
+        slide_path = slide_path[:-2]+".mrxs"
+    elif task == 'Stadio':
+        root = "/work/H2020DeciderFicarra/fmiccolis/PRINN/data/"
+        destination_root = f"/work/H2020DeciderFicarra/fmiccolis/PRINN/attention_maps/{task}/{levelmax}/{modello}/{seed}/{dataset}/"
+        name=name.replace('+','.')
+        datapath=pd.read_csv("/work/H2020DeciderFicarra/fmiccolis/PRINN/CLAM_patches/ostu_false/x20/process_list_autogen.csv")
+        slide_path=root+datapath[datapath["slide_id"].str.contains(name[:-2])]["slide_id"].item()
+        
+    json_path = destination_root+name
+    json_path = json_path[:-2]+"_ep"+str(epoch)+".json"#+"_lr"+str(learning_rate)+"_dr"+str(dropout_rate)+".json"
+    # name = args.attention_csv.split('/')[10].split('.')[0]+'.json'
+    json_best= destination_root+name
+    json_best = json_best[:-2]+"_bestep.json"
+    # slide = args.attention_csv.split('/')[10].split('.')[0][:-2]+'.mrxs'
+    
     wsi = openslide.open_slide(slide_path)
-    x_bound = wsi.properties['openslide.bounds-x']
-    y_bound = wsi.properties['openslide.bounds-y']
-    json_heat = compute_heatmap(A,x,y, levelmax, bound=[x_bound, y_bound])
+    try:
+        x_bound = wsi.properties['openslide.bounds-x']
+        y_bound = wsi.properties['openslide.bounds-y']
+    except:
+        x_bound = wsi.dimensions[0]
+        y_bound= wsi.dimensions[1]
+    json_heat = compute_heatmap(A, x, y, levelmax, bound=[x_bound, y_bound])
 
     os.makedirs(destination_root, exist_ok=True)
     with open(json_path, 'w') as f:
         geojson.dump(json_heat, f, indent=2)
+    with open(json_best, 'w') as f:
+        geojson.dump(json_heat, f, indent=2)
 
-def get_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--root', default='/mnt/beegfs/work/H2020DeciderFicarra/DECIDER/attention_maps/pfi_45_180/x20s_4/56/')
-    # parser.add_argument('--root', default='/mnt/beegfs/work/H2020DeciderFicarra/DECIDER/attention_maps/pfi_45_180/x5s_3/29/')
-    parser.add_argument('--annots', default='/mnt/beegfs/work/H2020DeciderFicarra/DECIDER/annotations/x20s_4/56/')
-    parser.add_argument('--slide_path', default='/mnt/beegfs/work/H2020DeciderFicarra/DECIDER/WSI_24_11_2022/')
-    parser.add_argument('--res', default='x20')
-    parser.add_argument('--attention_csv', default=None)
-    parser.add_argument('--parallel_job', default=False)
-
-    args = parser.parse_args()
-    return args
-
-
-
-
-# coordinates = [[[]]]
