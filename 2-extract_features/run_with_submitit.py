@@ -4,9 +4,9 @@ import sys
 import argparse
 import submitit
 
-from t2.extract_tree.embedding_extract_tree import processSlide
+from 2-extract_features.extract_tree.embedding_extract_tree import processSlide
 
-from t2.extract_tree.dino import utils as utils
+from 2-extract_features.extract_tree.dino import utils as utils
 import pandas as pd
 
 # Parse command line arguments

@@ -108,7 +108,7 @@ Args:
     down = 0
     return real_name, id, label, test, down
 
-def get_children(parent_id, x_base, y_base, basepath, allowedlevels, level, models, kinfos, infosConcat, base_shift):
+def get_children(parent_id, x_base, y_base, basepath, allowedlevels, level, models, kinfos, infosConcat, base_shift, processed):
     """
     Recursively get children patches and their embeddings
 
@@ -128,10 +128,12 @@ def get_children(parent_id, x_base, y_base, basepath, allowedlevels, level, mode
         kinfos (List[Dict[str, Any]]): The list of patch information dictionaries.
         infosConcat (List[Any]): The list of concatenated embeddings.
     """
-
+    if processed is None:
+            processed = []
+    
     # If no children return list unchanged
     if level == 4:
-        return kinfos, infosConcat
+        return kinfos, infosConcat, processed
     # Calculate the shift value for the current level
     shift = int(base_shift/2**level)
     # Calculate the updated coordinates based on the shift value
@@ -148,10 +150,18 @@ def get_children(parent_id, x_base, y_base, basepath, allowedlevels, level, mode
             basepath, "*_x_"+str(x)+"_y_"+str(y)+".jpg"))
         # If file is not present continue
         if len(path) == 0:
+            path=glob.glob(os.path.join(basepath, "*_x_"+str(x)+"_y_"+str(y)+"*"))
+        if len(path) == 0:
             continue
         path = path[0]
-        image = Image.open(path)
-        if level in allowedlevels:
+
+        
+        if level in allowedlevels and 'jpg' in path:
+            if path in processed:
+                continue
+            else:
+                processed.append(path)
+            image = Image.open(path)
             x, y = getinfo(path)
             embedding = getembedding(models, image, level)
             if parent_id is not None:
@@ -161,13 +171,13 @@ def get_children(parent_id, x_base, y_base, basepath, allowedlevels, level, mode
             kinfo = encapsulate_patch_info(parent_id=parent_id, x=x, y=y, id=len(
                 kinfos), shift=shift, level=level, embedding=embedding, path=path)
             kinfos.append(kinfo)
-            kinfos, infosConcat = get_children(kinfo["id"], x, y, path.split(
+            kinfos, infosConcat, processed = get_children(kinfo["id"], x, y, path.split(
                 ".")[0], allowedlevels, level+1, models, kinfos, infosConcat, base_shift)
         else:
-            kinfos, infosConcat = get_children(parent_id, x, y, path.split(
+            kinfos, infosConcat, processed = get_children(parent_id, x, y, path.split(
                 ".")[0], allowedlevels, level+1, models, kinfos, infosConcat, base_shift)
 
-    return kinfos, infosConcat
+    return kinfos, infosConcat, processed
 
   #
 
@@ -228,7 +238,7 @@ def create_matrix(df):
     return matrix
 
 
-def compute_tree_feats_Slide(real_name, label, test, args, models, save_path=None, base_shift=2048):
+def compute_tree_feats_Slide(real_name, label, test, args, models, save_path=None, base_shift=2048*2):
     """Compute tree features for a slide
 
     Args:
@@ -240,7 +250,7 @@ def compute_tree_feats_Slide(real_name, label, test, args, models, save_path=Non
         save_path (str, optional): The path to save the computed features. Defaults to None.
         base_shift (int, optional): The base shift value. Defaults to 2048.
     """
-
+    processed = None
     allowedlevels = args.levels
     level = 1
     shift = int(base_shift/2**level)
@@ -249,21 +259,29 @@ def compute_tree_feats_Slide(real_name, label, test, args, models, save_path=Non
         torch.backends.cudnn.enabled = False
         infos = []
         infos_concat = []
+        if real_name[-1] != '_':
+            real_name = real_name+'_'
         dest = os.path.join(save_path, test, real_name+"_"+str(label))
-        low_patches = glob.glob(os.path.join(
-            args.extractedpatchespath, real_name, '*.jpg'))
+        # low_patches = glob.glob(os.path.join(
+        #     args.extractedpatchespath, real_name, '*.jpg'))
+        all_patches = glob.glob(os.path.join(
+        args.extractedpatchespath, real_name, '*'))
+        imgs=[patch for patch in all_patches if '.jpg' in patch]
+        torem=[img[:-4] for img in imgs]
+        res=[el for el in all_patches if el not in torem]
+        low_patches=[el for el in all_patches if el not in torem]
         for path in tqdm.tqdm(low_patches):
             # Extract info about the patch
             x, y = getinfo(path)
-            if level in allowedlevels:
+            if level in allowedlevels and 'jpg' in path:
                 embedding = getembedding(models, path, level)
                 kinfo = encapsulate_patch_info(parent_id=None, path=path, x=x, y=y, id=len(
                     infos), shift=shift, level=level, embedding=embedding)
                 infos.append(kinfo)
-                infos, infos_concat = get_children(kinfo["id"], x, y, path.split(
+                infos, infos_concat, processed = get_children(kinfo["id"], x, y, path.split(
                     ".")[0], args.levels, level+1, models, infos, infos_concat, base_shift)
             else:
-                infos, infos_concat = get_children(None, x, y, path.split(
+                infos, infos_concat, processed = get_children(None, x, y, path.split(
                     ".")[0], args.levels, level+1, models, infos, infos_concat, base_shift)
         # Infos should contain a list of dictionaries per patch
         infos = search_neighboors(infos)
