@@ -74,30 +74,36 @@ def prepareslide(candidates, args):
         args (argparse.Namespace): Parsed command line arguments.
     """
     log_folder = "LOGFOLDER/%j"
+    
     executor = submitit.AutoExecutor(folder=log_folder)
 
     executor.update_parameters(slurm_partition=args.slurm_partition,
                                name="sort_hierarchy", slurm_time=200, mem_gb=10, slurm_additional_parameters={"account":"h2020deciderficarra"},slurm_array_parallelism=6)
     args = [args for c in candidates]
-    executor.map_array(nested_patches, candidates, args)
+    if args.slurm_execution:
+        executor.map_array(nested_patches, candidates, args)
+    else:
+        for c, a in zip(candidates, args):
+        nested_patches(c, a)
 
 
 
 def get_args():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='sort_slide')
-    parser.add_argument('--sourcex5', default="/mnt/beegfs/work/H2020DeciderFicarra/fmiccolis/WP2/CLAM_output/HR_pool/hard/x5/images/",
+    parser.add_argument('--sourcex5', default="path/to/CLAM/patches/output/x5/images/",
                         type=str, help='path to patches at 5x scale')
-    parser.add_argument('--sourcex10', default="/mnt/beegfs/work/H2020DeciderFicarra/fmiccolis/WP2/CLAM_output/HR_pool/hard/x10/images/",
+    parser.add_argument('--sourcex10', default="path/to/CLAM/patches/output/x10/images/",
                         type=str, help='path to patches at 10x scale')
-    parser.add_argument('--sourcex20', default="/mnt/beegfs/work/H2020DeciderFicarra/fmiccolis/WP2/CLAM_output/HR_pool/hard/x20/images/",
+    parser.add_argument('--sourcex20', default="path/to/CLAM/patches/output/x20/images/",
                         type=str, help='path to patches at 20x scale')
     parser.add_argument(
         '--slurm_partition', default="all_usr_prod", type=str, help='slurm partition')
     parser.add_argument('--step', default=10, type=int,
                         help='how many slides process within each job')
-    parser.add_argument('--dest', default="/mnt/beegfs/work/H2020DeciderFicarra/fmiccolis/WP2/step1_output/",
+    parser.add_argument('--dest', default="path/to/step1_output/",
                         type=str, help='destination folder')
+    parser.add_argument('--slurm_execution', default=True, type=bool)
     args = parser.parse_args()
     return args
 
@@ -145,7 +151,7 @@ def nested_patches(candidate, args):
         x10processed, x20processed = hierarchy(patch_x5_path, levelx10path, levelx20path,
                   newdestpath, 2048/(1+down), 1,x10processed, x20processed)
 
-    print('check differenza tra processed e rimanenti')
+    print('check differences between processed and remaining')
     x10remaining=[wsi for wsi in x10list if wsi.split('/')[-1] not in x10processed]
 
 

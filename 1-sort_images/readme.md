@@ -52,5 +52,7 @@ tumor_001_tumor/
 # Launch
 
 ```
-python sort_hierarchy --sourcex5  x5PATH --sourcex10 x10PATH --sourcex20 x20PATH --dest DEST
+python mil4wsi/1-sort_images/sort_hierarchy.py --sourcex5  path/to/CLAM/patches/output/x5/images/ --sourcex10 path/to/CLAM/patches/output/x10/images/ --sourcex20 path/to/CLAM/patches/output/x20/images/ --dest path/to/step1_output/ --slurm_execution False
 ```
+The `sourcex5` (as for `sourcex10` and `sourcex20`) is the path configured as `output_dir` of the step 0-extract_patches for the specific resolution.  
+The `slurm_execution` parameter must be True if you want to run the code using SLURM as executor, while must be False if you want to run the code directly from the command line. 

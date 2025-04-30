@@ -44,7 +44,7 @@ def get_args():
     group5.add_argument('--scale', default="3", type=str,
                         help='scale resolution')
     group5.add_argument('--dataset', default="cam", type=str,
-                        choices=["cam", "lung", "decider"], help='input size ')
+                        choices=["cam", "lung", "decider"], help='input dataset name')
     group5.add_argument('--datasetpath',  type=str, help='dataset path')
 
     # Distillation arguments
@@ -65,6 +65,7 @@ def get_args():
 
     group7= parser.add_argument_group("submitit")
     group7.add_argument('--partition', default="prod",type=str,help='partition name')
+    parser.add_argument('--slurm_execution', default=True, type=bool)
     group7.add_argument('--time', default=120, type=float, help='job duration')
     group7.add_argument('--nodes', default=1, type=int, help='number of jobs')
     group7.add_argument('--job_name', default="dasmil",type=str,help="job name")

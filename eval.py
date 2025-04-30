@@ -29,8 +29,16 @@ def main():
         experiments=experiments+launch_DASMIL_lung(args)
     else:
         experiments=experiments+launch_buffermil(args)
-    executor.map_array(eval,experiments)
-    #eval(experiments[1])
+    if args.slurm_execution:
+        print("slurm execution")
+        # Submit the jobs to the cluster
+        executor.map_array(eval,experiments)
+    else:
+        print("local execution")
+        # Run the function directly
+        for i in range(len(experiments)):
+            eval(experiments[i])
+        
 
 if __name__ == '__main__':
     main()

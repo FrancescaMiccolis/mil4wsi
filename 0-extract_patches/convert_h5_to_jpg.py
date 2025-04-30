@@ -115,6 +115,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_auto_skip', default=False, action='store_true')
     parser.add_argument('--custom_downsample', type=int, default=1)
     parser.add_argument('--target_patch_size', type=int, default=-1)
+    parser.add_argument('--slurm_execution', default=True, type=bool)
     args = parser.parse_args()
 
     # Load the bags dataset through the csv file
@@ -126,8 +127,13 @@ if __name__ == '__main__':
     parameters = [args for i in range(total)]
 
     # Configure the executor for parallel execution
-    executor = submitit.AutoExecutor("logs/")
-    executor.update_parameters(slurm_partition="prod", name="data_prep",
-                               slurm_time=600, mem_gb=15, slurm_array_parallelism=5)
-    jobs = executor.map_array(process, candidates, parameters)
-    # process(0,args)
+    if args.slurm_execution:
+        executor = submitit.AutoExecutor(folder="logs/")
+        executor.update_parameters(slurm_partition="prod", name="data_prep",
+                                   slurm_time=600, mem_gb=15, slurm_array_parallelism=5)
+        jobs = executor.map_array(process, candidates, parameters)
+    else:
+        for i, args in enumerate(parameters):
+            print("job", i)
+            process(i, args)
+

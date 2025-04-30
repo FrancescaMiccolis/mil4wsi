@@ -19,6 +19,10 @@ To convert the dataset into PyTorch geometric launch:
 ```bash
 python prepare_dataset.py --source PATH --dest PATH --levels 23
 ```
+for example 
+```bash
+python prepare_dataset.py --source path/to/step2_output/ --dest path/to/step3_output/ --levels 23
+```
 
 where levels represent the magnitude scale:
 ```

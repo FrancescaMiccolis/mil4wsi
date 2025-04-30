@@ -14,10 +14,10 @@
 
 Launch the feature extraction through submitit!
 ```
-python run_with_submitit.py --extractedpatchespath HIERARCHICAL_PATH --savepath DESTINATION_PATH --pretrained_weights1 CHECKPOINTDINO20x --pretrained_weights2 CHECKPOINTDINO10x --pretrained_weights3 CHECKPOINTDINO5x --propertiescsv CSV_PATH
+python mil4wsi/2-extract_features/features_extraction.py --extractedpatchespath HIERARCHICAL_PATH --savepath DESTINATION_PATH --pretrained_weights1 CHECKPOINTDINO20x --pretrained_weights2 CHECKPOINTDINO10x --pretrained_weights3 CHECKPOINTDINO5x --propertiescsv CSV_PATH
 ```
 
 EXAMPLE:
 ```
-python run_with_submitit.py --extractedpatchespath /mnt/beegfs/work/H2020DeciderFicarra/decider/decider_multi --savepath /mnt/beegfs/work/H2020DeciderFicarra/decider/feats/hr --pretrained_weights1 /mnt/beegfs/work/H2020DeciderFicarra/dinodecider20/checkpoint.pth --pretrained_weights2 /mnt/beegfs/work/H2020DeciderFicarra/dinodecider10/checkpoint.pth --pretrained_weights3 /mnt/beegfs/work/H2020DeciderFicarra/dinodecider5/checkpoint.pth --propertiescsv hr.csv
+python mil4wsi/2-extract_features/features_extraction.py --extractedpatchespath path/to/step1_output/ --savepath path/to/step2_output/ --pretrained_weights1 mil4wsi/2-extract_features/extract_tree/dino/x20/checkpoint.pth --pretrained_weights2 mil4wsi/2-extract_features/extract_tree/dino/x10/checkpoint.pth --pretrained_weights3 mil4wsi/2-extract_features/extract_tree/dino/x5/checkpoint.pth --propertiescsv labels.csv
 ```

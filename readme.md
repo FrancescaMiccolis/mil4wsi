@@ -37,7 +37,7 @@ This work uses [CLAM](https://github.com/mahmoodlab/CLAM) to filter out backgrou
 - [H5-to-jpg](0-extract_patches/readme.md): It converts .h5 coordinates into jpg images
 - [Sort images](1-sort_images/readme.md): It reorganizes patches into hierarchical folders
 - [Dino Training](https://github.com/facebookresearch/dino): Given the patches, train dino with the `vit_small` option
-- [Feature Extraction](t2/readme.md): It extracts patch features and adjacency matrices
+- [Feature Extraction](2-extract_features/readme.md): It extracts patch features and adjacency matrices
 - [Geometric Dataset Conversion](3-prepare-geomDataset/readme.md): It  allows to work with graphs architectures and PyTorch geometric
 
 # Available Models
@@ -48,7 +48,7 @@ This work uses [CLAM](https://github.com/mahmoodlab/CLAM) to filter out backgrou
 - DASMIL
 - BUFFERMIL
 - TRANSMIL
-- HIPT
+
 
 # DASMIL
 <p align="center">
@@ -84,7 +84,7 @@ This work uses [CLAM](https://github.com/mahmoodlab/CLAM) to filter out backgrou
 ## Training
 
 ```bash
-python main.py --datasetpath DATASETPATH --dataset [cam or lung]
+python main.py --datasetpath DATASETPATH --dataset [cam or lung or custom dataset]
 ```
 
 ## Reproducibility
@@ -109,13 +109,18 @@ python main.py --datasetpath DATASETPATH --dataset [cam or lung]
 | :---------------------: | :---------------------: |
 | [Dataset](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/cam_feats.zip) ~4.25GB | [Dataset](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/lung_feats.zip) ~17.5GB |
 
+
+If the user want to test the framework with a custom dataset, change  the ` group5.add_argument('--dataset', default="cam", type=str,
+                        choices=["cam", "lung"], help='input dataset name')` parameter accordingly in `utilsmil4wsi/parser.py`
+and setup checkpoints and datasets paths in `utils/experiment.py`
+
+
 ## Eval
 
-setup checkpoints and datasets paths in utils/experiment.py
-then
 ```bash
-python eval.py --datasetpath DATASETPATH --checkpoint CHECKPOINTPATH --dataset [cam or lung]
+python eval.py --datasetpath DATASETPATH --checkpoint CHECKPOINTPATH --dataset [cam or lung or custom dataset]
 ```
+
 
 # Contributing
 

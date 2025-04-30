@@ -4,9 +4,9 @@ import sys
 import argparse
 import submitit
 
-from 2-extract_features.extract_tree.embedding_extract_tree import processSlide
+from extract_tree.embedding_extract_tree import processSlide
 
-from 2-extract_features.extract_tree.dino import utils as utils
+from extract_tree.dino import utils as utils
 import pandas as pd
 
 # Parse command line arguments
@@ -19,7 +19,7 @@ parser.add_argument('--norm_layer', default='instance',
 parser.add_argument("--extractedpatchespath", type=str)
 parser.add_argument("--savepath", type=str)
 parser.add_argument("--levels", type=int, nargs="+",
-                    default=[2,3], help="resolution level")
+                    default=[1,2,3], help="resolution level")
 parser.add_argument("--step", type=int, default=20)
 parser.add_argument("--job_number", type=int, default=-1)
 parser.add_argument('--propertiescsv',
@@ -40,6 +40,7 @@ parser.add_argument('--avgpool_patchtokens', default=False, type=utils.bool_flag
 We typically set this to False for ViT-Small and to True with ViT-Base.""")
 parser.add_argument("--checkpoint_key", default="teacher", type=str,
                     help='Key to use in the checkpoint (example: "teacher")')
+parser.add_argument('--slurm_execution', default=True, type=bool)
 args, _ = parser.parse_known_args()
 args.levels = list(args.levels)
 
@@ -65,5 +66,10 @@ df = pd.read_csv(args.propertiescsv)
 # Create a list of arguments for each job
 args = [args for i in range(0, len(df), args.step)]
 # Submit jobs using map_array method
-jobs = executor.map_array(processSlide, range(0, len(df), args[0].step), args)
-#processSlide(0,args[0])
+if args.slurm_execution:
+    # Use map_array to submit jobs in parallel
+    executor.map_array(processSlide, range(0, len(df), args[0].step), args)
+else:
+    # If not using Slurm, run the function directly for each sample
+    for i in range(0, len(df), args[0].step):
+        processSlide(i, args[0])

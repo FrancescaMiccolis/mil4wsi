@@ -41,7 +41,7 @@ def launch_buffermil(args):
         [48],  # seed
         ["Buffermil"],
         ["mean"],
-        ["dataset_path"],
+        ["path/to/step3_output"],
 
     ]
     #aggiungere flag per leave one out
@@ -49,7 +49,7 @@ def launch_buffermil(args):
     for element in itertools.product(*multiscale_hyperparameters):
     
         args1 = copy.copy(args)
-        args1.scale = "3"
+        args1.scale = "3" #The defauklt scale is 20x
         args1.tag = "tag_run"
         args1.project = "project_name"
         args1.ntop, args1.buffer_freq, args1.seed, args1.modeltype, args1.bufferaggregate, args1.datasetpath = element

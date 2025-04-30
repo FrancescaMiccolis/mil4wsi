@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--source', type=str, help='origin folder')
 parser.add_argument('--dest', type=str, help='destination folder')
 parser.add_argument('--levels', type=int, nargs='+', default=[2,3], help='destination folder')
-{}
+parser.add_argument('--slurm_execution', default=True, type=bool)
 args = parser.parse_args()
 dest = args.dest
 source = args.source
@@ -228,13 +228,18 @@ def main():
     Execution setting.
     """
     log_folder = "log_test/%j"
+    
     # Create an AutoExecutor instance with the log folder
     executor = submitit.AutoExecutor(folder=log_folder)
     # Update the parameters of the executor
     executor.update_parameters(
         slurm_partition="prod", name="data_prep", slurm_time=1200, cpus_per_task=5, mem_gb=20)
-    # Submit the prepareslide function as a job
-    jobs = executor.submit(prepareslide)
+    if args.slurm_execution:
+        # Submit the prepareslide function as a job
+        jobs = executor.submit(prepareslide)
+    else:
+        # If not using Slurm, run the function directly
+        prepareslide()
 
 
 if __name__ == '__main__':
