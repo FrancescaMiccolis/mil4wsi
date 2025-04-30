@@ -5,14 +5,31 @@
 # Introduction
 Welcome to the mil4wsi Framework – your gateway to state-of-the-art Multiple Instance Learning (MIL) model implementations for gigapixel whole slide images. This comprehensive open-source repository empowers researchers, developers, and enthusiasts to explore and leverage cutting-edge MIL techniques.
 
-# Installation
+# Automatic Installation
 
 ```bash
-conda create -n wsissl python=3.9
+conda create -n wsissl python=3.10
 conda activate wsissl
 conda env update --file environment.yml
 ```
 
+# Manual Installation
+create Environment
+```bash
+conda create -n ENV_NAME python=3.10
+conda activate ENV_NAME
+```
+1) Install torch; 2) Install pytorch_geometric; 3) Install additional packages for visualization and log as:
+
+```bash
+pip install submitit joblib pandas wandb openslide-python==1.2.0 scikit-image wsiprocess scikit-learn matplotlib nystrom_attention
+```
+
+Example with torch==2.4.0; cuda==11.8
+
+```bash
+conda create -n ENV_NAME python=3.10 && conda activate ENV_NAME && pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && pip install torch_geometric pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.4.0+cu118.html && pip install submitit joblib pandas wandb openslide-python==1.2.0 scikit-image wsiprocess scikit-learn matplotlib nystrom_attention
+```
 # Data Preprocessing
 
 This work uses [CLAM](https://github.com/mahmoodlab/CLAM) to filter out background patches. After the .h5 coordinate generation, use:
@@ -52,12 +69,16 @@ This work uses [CLAM](https://github.com/mahmoodlab/CLAM) to filter out backgrou
 }
 
 
-@article{Bontempo2023_TMI,
-  title={{A Graph-Based Multi-Scale Approach with Knowledge Distillation for WSI Classification}},
+@ARTICLE{Bontempo2024_TMI,
   author={Bontempo, Gianpaolo and Bolelli, Federico and Porrello, Angelo and Calderara, Simone and Ficarra, Elisa},
-  journal={IEEE Transactions on Medical Imaging},
-  year={2023},
-}
+  journal={IEEE Transactions on Medical Imaging}, 
+  title={A Graph-Based Multi-Scale Approach With Knowledge Distillation for WSI Classification}, 
+  year={2024},
+  volume={43},
+  number={4},
+  pages={1412-1421},
+  keywords={Feature extraction;Proposals;Spatial resolution;Knowledge engineering;Graph neural networks;Transformers;Prediction algorithms;Whole slide images (WSIs);multiple instance learning (MIL);(self) knowledge distillation;weakly supervised learning},
+  doi={10.1109/TMI.2023.3337549}}
 ```
 
 ## Training
@@ -73,8 +94,8 @@ python main.py --datasetpath DATASETPATH --dataset [cam or lung]
 |    DINO Camelyon16    |       DINO LUNG       |
 | :-------------------: | :-------------------: |
 | [x5](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x5/checkpoint.pth.gz) ~0.65GB | [x5](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/lung/dino/x5/checkpoint.pth.gz) ~0.65GB |
-| [x10](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x10/checkpoint.pth.gz) ~0.65GB | [x10](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x10/checkpoint.pth.gz) ~0.65GB |
-| [x20](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x20/checkpoint.pth.gz) ~0.65GB | [x20](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x20/checkpoint.pth.gz) ~0.65GB |
+| [x10](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x10/checkpoint.pth.gz) ~0.65GB | [x10](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/lung/dino/x10/checkpoint.pth.gz) ~0.65GB |
+| [x20](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/camelyon16/dino/x20/checkpoint.pth.gz) ~0.65GB | [x20](https://ailb-web.ing.unimore.it/publicfiles/miccai_dasmil_checkpoints/dasmil/lung/dino/x20/checkpoint.pth.gz) ~0.65GB |
 
 |    DASMIL Camelyon16    |       DASMIL LUNG       |
 | :---------------------: | :---------------------: |
