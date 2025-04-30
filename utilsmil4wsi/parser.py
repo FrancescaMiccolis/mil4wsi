@@ -44,7 +44,7 @@ def get_args():
     group5.add_argument('--scale', default="3", type=str,
                         help='scale resolution')
     group5.add_argument('--dataset', default="cam", type=str,
-                        choices=["cam", "lung"], help='input size ')
+                        choices=["cam", "lung", "decider"], help='input size ')
     group5.add_argument('--datasetpath',  type=str, help='dataset path')
 
     # Distillation arguments

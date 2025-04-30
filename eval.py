@@ -25,8 +25,10 @@ def main():
     experiments=[]
     if args.dataset== "cam":
         experiments=experiments+launch_DASMIL_cam(args)
-    else:
+    elif args.dataset== "lung":
         experiments=experiments+launch_DASMIL_lung(args)
+    else:
+        experiments=experiments+launch_buffermil(args)
     executor.map_array(eval,experiments)
     #eval(experiments[1])
 
