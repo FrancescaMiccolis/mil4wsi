@@ -3,9 +3,16 @@
 
 Since this work  requires jpg, this [script](https://github.com/aimagelab/mil4wsi/blob/main/0-extract_patches/convert_h5_to_jpg.py) converts the coordinates into images.
 
-Use this script inside the [CLAM](https://github.com/mahmoodlab/CLAM) repository
+Use this script inside the [CLAM](https://github.com/mahmoodlab/CLAM) repository, or if you prefer add these lines 
 
-
+```
+import sys
+sys.path.insert(0, '<path to CLAM>/datasets')
+```
+before the line:
+```
+from datasets.dataset_h5 import Dataset_All_Bags, Whole_Slide_Bag_FP
+```
 
 This script is designed to extract patches for a single resolution only. To accommodate multiple scales, you must rerun CLAM and this script for each desired scale. Once you have the patches for all scales, you can hierarchically organize them using the 1_sort_images script, ensuring you provide the correct paths for each scale.
 
