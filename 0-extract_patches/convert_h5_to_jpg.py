@@ -14,6 +14,9 @@
 
 import torch
 import os
+import sys 
+# Adjust the path once cloned the CLAM git repository 
+sys.path.insert(0, "<path_to_CLAM>/datasets")
 import time
 import openslide
 import torchvision.transforms as transforms
