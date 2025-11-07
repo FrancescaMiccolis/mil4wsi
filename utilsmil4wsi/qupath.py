@@ -129,8 +129,8 @@ def compute_heatmap(A,x_array,y_array, res, bound):
 def processjson(A,x,y,name,levelmax):
     #A = pd.read_csv(args.attention_csv, index_col=0)
 
-    root='/mnt/beegfs/work/H2020DeciderFicarra/DECIDER/WSI_24_11_2022/'
-    destination_root="/mnt/beegfs/work/H2020DeciderFicarra/attentafrancy/json/"
+    root='path/to/wsi/'
+    destination_root="attention_maps_output/"
     slide_path=root+name
     slide_path=slide_path[:-2]+".mrxs"
 

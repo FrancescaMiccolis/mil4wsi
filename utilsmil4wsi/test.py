@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from utilsmil4wsi.metrics import computeMetrics
-
+from utils.qupath import processjson
 
 def test(model, testloader):
     """
@@ -29,7 +29,7 @@ def test(model, testloader):
     # Iterate over the test data
     for _, data in enumerate(testloader):
         data = data.cuda()
-        x, edge_index, childof, level = data.x, data.edge_index, data.childof, data.level
+        x, edge_index, childof, level, name = data.x, data.edge_index, data.childof, data.level, data.name
 
         # Check if additional edge indices are present
         if data.__contains__("edge_index_2") and data.__contains__("edge_index_3"):
@@ -40,6 +40,10 @@ def test(model, testloader):
         # Forward pass through the model
         results = model(x, edge_index, level, childof,
                         edge_index2, edge_index3)
+        x_coords=x_coords[level==level.max()]
+        y_coords=y_coords[level==level.max()]
+
+        processjson(A= results["higher"][2].cpu().detach().numpy(),x=x_coords.cpu().detach().numpy(),y=y_coords.cpu().detach().numpy(),name=name[0],levelmax=level.max()) 
         bag_label = data.y.float().squeeze().cpu().numpy()
 
         # Convert bag label to numpy array
