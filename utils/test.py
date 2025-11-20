@@ -23,12 +23,13 @@ def test(model,testloader,args,bestperformance,epoch):
     idxs=[]
     names=[]
     loss_module_instance = BCEWithLogitsLoss()
-    if task == "PFI":
-        pfis=[]
-        dfpfi=pd.read_csv("/work/H2020DeciderFicarra/fmiccolis/clinical_export_2023-07-05.csv")
-        expfi=pd.read_excel("/work/H2020DeciderFicarra/D2_4/datasets/DECIDER_cohorts/docs/240607_Clinical_export_Decider_Collab.xlsx")
-    elif task == "HR":
-        hrs=[]
+    try: 
+        if task == "PFI":
+            pfis=[]
+            dfpfi=pd.read_csv("/work/H2020DeciderFicarra/fmiccolis/clinical_export_2023-07-05.csv")
+            expfi=pd.read_excel("/work/H2020DeciderFicarra/D2_4/datasets/DECIDER_cohorts/docs/240607_Clinical_export_Decider_Collab.xlsx")
+        elif task == "HR":
+            hrs=[]
     # elif task == "Stadio":
     #     stadios=[]
     for _,data in enumerate(testloader):
